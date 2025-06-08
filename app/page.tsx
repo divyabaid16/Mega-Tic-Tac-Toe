@@ -2,12 +2,18 @@
 
 import { useState } from "react";
 
-const emptyBoard = () =>
+const emptyBoard = (): (string | null)[][] =>
   Array(3)
     .fill(null)
     .map(() => Array(3).fill(null));
 
-function LocalBoard({ board, onClick, disabled }) {
+type LocalBoardProps = {
+  board: (string | null)[][];
+  onClick: (i: number, j: number) => void;
+  disabled: boolean;
+};
+
+function LocalBoard({ board, onClick, disabled }: LocalBoardProps) {
   return (
     <div className="grid grid-cols-3 gap-1 border p-1">
       {board.map((row, i) =>
@@ -27,17 +33,17 @@ function LocalBoard({ board, onClick, disabled }) {
 }
 
 export default function MegaTicTacToe() {
-  const initBoards = () =>
+  const initBoards = (): (string | null)[][][][] =>
     Array(3)
       .fill(null)
       .map(() => Array(3).fill(null).map(emptyBoard));
   const [boards, setBoards] = useState(initBoards);
   const [owners, setOwners] = useState(emptyBoard());
-  const [currentPlayer, setCurrentPlayer] = useState("X");
-  const [nextBoard, setNextBoard] = useState(null);
-  const [winner, setWinner] = useState(null);
+  const [currentPlayer, setCurrentPlayer] = useState<"X" | "O">("X");
+  const [nextBoard, setNextBoard] = useState<[number, number] | null>(null);
+  const [winner, setWinner] = useState<"X" | "O" | null>(null);
 
-  const checkWinner = (board) => {
+  const checkWinner = (board: (string | null)[][]): "X" | "O" | null => {
     const lines = [
       ...board,
       ...[0, 1, 2].map((i) => board.map((row) => row[i])),
@@ -45,12 +51,16 @@ export default function MegaTicTacToe() {
       [0, 1, 2].map((i) => board[i][2 - i]),
     ];
     for (const line of lines) {
-      if (line[0] && line.every((cell) => cell === line[0])) return line[0];
+      if (line[0] && line.every((cell) => cell === line[0])) {
+        if (line[0] === "X" || line[0] === "O") {
+          return line[0];
+        }
+      }
     }
     return null;
   };
 
-  const handleMove = (bi, bj, i, j) => {
+  const handleMove = (bi: number, bj: number, i: number, j: number) => {
     if (winner || (nextBoard && (bi !== nextBoard[0] || bj !== nextBoard[1])))
       return;
     if (owners[bi][bj]) return;
@@ -114,8 +124,8 @@ export default function MegaTicTacToe() {
                 <LocalBoard
                   board={board}
                   disabled={
-                    !!owners[i][j] ||
-                    (nextBoard && (nextBoard[0] !== i || nextBoard[1] !== j))
+                    !!owners[i][j] || // Ensure this is a boolean
+                    !!(nextBoard && (nextBoard[0] !== i || nextBoard[1] !== j)) // Coerce to boolean
                   }
                   onClick={(x, y) => handleMove(i, j, x, y)}
                 />
